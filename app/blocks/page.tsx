@@ -11,6 +11,7 @@ import {
   Grid,
   Paper,
 } from '@mui/material';
+import { fetchBlocks } from '../../utils/fetchData';
 
 // Define types for blocks and selectedBlock
 interface BlockData {
@@ -37,40 +38,30 @@ interface SelectedBlock {
 }
 
 export default function Blocks() {
-  // Update state types
   const [blocks, setBlocks] = useState<BlockData[]>([]);
-  const [selectedBlock, setSelectedBlock] = useState<SelectedBlock | null>(null);
+  const [selectedBlock, setSelectedBlock] = useState<SelectedBlock | null>(
+    null
+  );
 
   useEffect(() => {
-    async function fetchBlocks() {
+    async function fetchData() {
       try {
-        const provider = new JsonRpcProvider('http://127.0.0.1:8545/');
-        const latestBlockNumber = await provider.getBlockNumber();
-        const blockData = await Promise.all(
-          Array.from({ length: 10 }, (_, i) => latestBlockNumber - i).map(
-            async (blockNumber) => {
-              const block = await provider.getBlock(blockNumber);
-              if (!block) return null;
-              return {
-                number: block.number,
-                timestamp: new Date(block.timestamp * 1000).toLocaleString(),
-                hash: block.hash,
-                gasUsed: block.gasUsed.toString(),
-                transactions: block.transactions.length,
-              };
-            }
-          )
+        const rpcUrl =
+          localStorage.getItem('rpcUrl') || 'http://127.0.0.1:8545/';
+        const provider = new JsonRpcProvider(rpcUrl);
+        const blockData = await fetchBlocks(provider, 10);
+        setBlocks(
+          blockData.map((block) => ({
+            ...block,
+            transactions: block.transactions.length, // Convert transactions array to its length
+          }))
         );
-
-        // Filter out null values from blocks
-        const uniqueBlocks = blockData.filter((block): block is BlockData => block !== null);
-        setBlocks(uniqueBlocks);
       } catch (error) {
         console.error('Error fetching blocks:', error);
       }
     }
 
-    fetchBlocks();
+    fetchData();
   }, []);
 
   // Explicitly type parameters
@@ -173,6 +164,7 @@ export default function Blocks() {
 
       {blocks.map((block, index) => (
         <Card
+          key={block.hash}
           variant="outlined"
           sx={{ cursor: 'pointer', mb: 2 }}
           onClick={() => fetchBlockDetails(block.number)}

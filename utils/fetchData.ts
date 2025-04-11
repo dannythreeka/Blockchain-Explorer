@@ -1,37 +1,69 @@
-// Extract shared logic for fetching blocks and transactions into a utility function
 import { JsonRpcProvider } from 'ethers';
 
-export async function fetchAllBlocksAndTransactions(provider: JsonRpcProvider) {
+interface TransactionData {
+  hash: string;
+  from: string;
+  to: string | null;
+  gasLimit: string;
+  value: string;
+  data?: string;
+}
+
+interface BlockData {
+  number: number;
+  timestamp: string;
+  hash: string;
+  gasUsed: string;
+  transactions: TransactionData[]; // Update transactions to be an array of TransactionData
+}
+
+export async function fetchBlocks(
+  provider: JsonRpcProvider,
+  count: number
+): Promise<BlockData[]> {
   const latestBlockNumber = await provider.getBlockNumber();
-  const blocksWithTransactions = await Promise.all(
-    Array.from({ length: latestBlockNumber + 1 }, (_, i) => i).map(
-      async (blockNumber) => {
+  const blockData = await Promise.all(
+    Array.from({ length: count }, (_, i) => latestBlockNumber - i).map(
+      async (blockNumber): Promise<BlockData | null> => {
         const block = await provider.getBlock(blockNumber);
-        if (block) {
-          const transactions = await Promise.all(
-            block.transactions.map(async (txHash: string) => {
-              const tx = await provider.getTransaction(txHash);
-              return {
-                hash: tx?.hash || 'N/A',
-                from: tx?.from || 'N/A',
-                to: tx?.to || 'Contract Creation',
-                gasLimit: tx?.gasLimit.toString() || '0',
-                value: tx?.value.toString() || '0',
-                data: tx?.data || 'No data available',
-              };
-            })
-          );
-          return {
-            number: block.number,
-            timestamp: new Date(block.timestamp * 1000).toLocaleString(),
-            hash: block.hash || 'N/A',
-            gasUsed: block.gasUsed.toString(),
-            transactions,
-          };
-        }
-        return null;
+        if (!block) return null;
+        const transactions = await Promise.all(
+          block.transactions.map(async (txHash: string) => {
+            const tx = await provider.getTransaction(txHash);
+            return {
+              hash: tx?.hash || 'N/A',
+              from: tx?.from || 'N/A',
+              to: tx?.to || null,
+              gasLimit: tx?.gasLimit.toString() || '0',
+              value: tx?.value.toString() || '0',
+              data: tx?.data || undefined,
+            };
+          })
+        );
+        return {
+          number: block.number,
+          timestamp: new Date(block.timestamp * 1000).toLocaleString(),
+          hash: block.hash || 'N/A',
+          gasUsed: block.gasUsed.toString(),
+          transactions,
+        };
       }
     )
   );
-  return blocksWithTransactions.filter((block) => block !== null);
+
+  // Filter out null values and remove duplicate blocks by hash
+  const uniqueBlocks = blockData.filter(
+    (block, index, self) =>
+      block !== null && self.findIndex((b) => b?.hash === block.hash) === index
+  );
+
+  return uniqueBlocks as BlockData[];
+}
+
+export async function fetchAllBlocksAndTransactions() {
+  const rpcUrl = localStorage.getItem('rpcUrl') || 'http://127.0.0.1:8545/';
+  const provider = new JsonRpcProvider(rpcUrl);
+
+  const blocks = await fetchBlocks(provider, 10); // Fetch the 10 most recent blocks
+  return blocks;
 }
