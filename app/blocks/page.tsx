@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { JsonRpcProvider, formatEther } from 'ethers';
 import { Box, Typography, Card, CardContent, Button } from '@mui/material';
+import Link from 'next/link';
 import { fetchBlocks } from '../../utils/fetchData';
 
 // Define types for blocks and selectedBlock
@@ -55,46 +56,6 @@ export default function Blocks() {
 
     fetchData();
   }, []);
-
-  // Explicitly type parameters
-  const fetchBlockDetails = async (blockNumber: number) => {
-    try {
-      const provider = new JsonRpcProvider('http://127.0.0.1:8545/');
-      const block = await provider.getBlock(blockNumber);
-      if (!block) {
-        console.error('Block not found');
-        return;
-      }
-
-      const transactions = await Promise.all(
-        block.transactions.map(async (txHash) => {
-          const tx = await provider.getTransaction(txHash);
-          if (!tx) {
-            console.error('Transaction not found');
-            return null;
-          }
-          return {
-            hash: tx.hash,
-            from: tx.from,
-            to: tx.to,
-            gasLimit: tx.gasLimit.toString(),
-            value: tx.value.toString(),
-          };
-        })
-      );
-
-      setSelectedBlock({
-        number: block.number,
-        gasUsed: block.gasUsed.toString(),
-        gasLimit: block.gasLimit.toString(),
-        timestamp: block.timestamp,
-        hash: block.hash || 'N/A', // Provide fallback for null hash
-        transactions: transactions.filter((tx) => tx !== null), // Filter out null transactions
-      });
-    } catch (error) {
-      console.error('Error fetching block details:', error);
-    }
-  };
 
   if (selectedBlock) {
     return (
@@ -159,7 +120,6 @@ export default function Blocks() {
           key={block.hash}
           variant="outlined"
           sx={{ cursor: 'pointer', mb: 2 }}
-          onClick={() => fetchBlockDetails(block.number)}
         >
           <CardContent>
             <Typography variant="body1">
@@ -177,6 +137,11 @@ export default function Blocks() {
             <Typography variant="body1">
               <strong>Transactions:</strong> {block.transactions}
             </Typography>
+            <Link href={`/blocks/${block.hash}`} passHref>
+              <Button variant="contained" color="primary">
+                View Details
+              </Button>
+            </Link>
           </CardContent>
         </Card>
       ))}
