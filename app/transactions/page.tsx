@@ -126,10 +126,10 @@ export default function Transactions() {
 
         // Separate transactions into CONTRACT CREATION and VALUE TRANSFER
         const contractCreationTransactions = sortedTransactions.filter(
-          (tx: TransactionData) => tx.to === 'Contract Creation'
+          (tx: TransactionData) => tx.to === null // Contract creation transactions have a null 'to' field
         );
         const valueTransferTransactions = sortedTransactions.filter(
-          (tx: TransactionData) => tx.to !== 'Contract Creation'
+          (tx: TransactionData) => tx.to !== null // Value transfer transactions have a non-null 'to' field
         );
 
         return (
