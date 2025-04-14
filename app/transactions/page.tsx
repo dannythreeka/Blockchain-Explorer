@@ -2,14 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { JsonRpcProvider, formatEther } from 'ethers';
-import {
-  Box,
-  Typography,
-  Card,
-  CardContent,
-  Button,
-  Grid,
-} from '@mui/material';
+import { Box, Typography, Card, CardContent, Button } from '@mui/material';
 import { fetchBlocks } from '../../utils/fetchData';
 
 interface TransactionData {
@@ -148,101 +141,97 @@ export default function Transactions() {
             <Typography variant="h6" gutterBottom>
               Contract Creation Transactions
             </Typography>
-            {contractCreationTransactions.map(
-              (tx: TransactionData, index: number) => (
-                <Card
-                  key={tx.hash}
-                  variant="outlined"
-                  sx={{ cursor: 'pointer' }}
-                  onClick={() => setSelectedTransaction(tx)}
+            {contractCreationTransactions.map((tx: TransactionData) => (
+              <Card
+                key={tx.hash}
+                variant="outlined"
+                sx={{ cursor: 'pointer' }}
+                onClick={() => setSelectedTransaction(tx)}
+              >
+                <CardContent
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
                 >
-                  <CardContent
+                  <Box>
+                    <Typography variant="body1">
+                      <strong>Transaction Hash:</strong> {tx.hash}
+                    </Typography>
+                    <Typography variant="body1">
+                      <strong>From:</strong> {tx.from}
+                    </Typography>
+                    <Typography variant="body1">
+                      <strong>Gas Limit:</strong> {tx.gasLimit}
+                    </Typography>
+                    <Typography variant="body1">
+                      <strong>Value:</strong> {formatEther(tx.value)} ETH
+                    </Typography>
+                  </Box>
+                  <Box
                     sx={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
+                      backgroundColor: 'red',
+                      color: 'white',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      fontWeight: 'bold',
                     }}
                   >
-                    <Box>
-                      <Typography variant="body1">
-                        <strong>Transaction Hash:</strong> {tx.hash}
-                      </Typography>
-                      <Typography variant="body1">
-                        <strong>From:</strong> {tx.from}
-                      </Typography>
-                      <Typography variant="body1">
-                        <strong>Gas Limit:</strong> {tx.gasLimit}
-                      </Typography>
-                      <Typography variant="body1">
-                        <strong>Value:</strong> {formatEther(tx.value)} ETH
-                      </Typography>
-                    </Box>
-                    <Box
-                      sx={{
-                        backgroundColor: 'red',
-                        color: 'white',
-                        padding: '4px 8px',
-                        borderRadius: '4px',
-                        fontWeight: 'bold',
-                      }}
-                    >
-                      CONTRACT CREATION
-                    </Box>
-                  </CardContent>
-                </Card>
-              )
-            )}
+                    CONTRACT CREATION
+                  </Box>
+                </CardContent>
+              </Card>
+            ))}
 
             <Typography variant="h6" gutterBottom>
               Value Transfer Transactions
             </Typography>
-            {valueTransferTransactions.map(
-              (tx: TransactionData, index: number) => (
-                <Card
-                  key={tx.hash}
-                  variant="outlined"
-                  sx={{ cursor: 'pointer' }}
-                  onClick={() => setSelectedTransaction(tx)}
+            {valueTransferTransactions.map((tx: TransactionData) => (
+              <Card
+                key={tx.hash}
+                variant="outlined"
+                sx={{ cursor: 'pointer' }}
+                onClick={() => setSelectedTransaction(tx)}
+              >
+                <CardContent
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
                 >
-                  <CardContent
+                  <Box>
+                    <Typography variant="body1">
+                      <strong>Transaction Hash:</strong> {tx.hash}
+                    </Typography>
+                    <Typography variant="body1">
+                      <strong>From:</strong> {tx.from}
+                    </Typography>
+                    <Typography variant="body1">
+                      <strong>To:</strong> {tx.to}
+                    </Typography>
+                    <Typography variant="body1">
+                      <strong>Gas Limit:</strong> {tx.gasLimit}
+                    </Typography>
+                    <Typography variant="body1">
+                      <strong>Value:</strong> {formatEther(tx.value)} ETH
+                    </Typography>
+                  </Box>
+                  <Box
                     sx={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
+                      backgroundColor: 'green',
+                      color: 'white',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      fontWeight: 'bold',
                     }}
                   >
-                    <Box>
-                      <Typography variant="body1">
-                        <strong>Transaction Hash:</strong> {tx.hash}
-                      </Typography>
-                      <Typography variant="body1">
-                        <strong>From:</strong> {tx.from}
-                      </Typography>
-                      <Typography variant="body1">
-                        <strong>To:</strong> {tx.to}
-                      </Typography>
-                      <Typography variant="body1">
-                        <strong>Gas Limit:</strong> {tx.gasLimit}
-                      </Typography>
-                      <Typography variant="body1">
-                        <strong>Value:</strong> {formatEther(tx.value)} ETH
-                      </Typography>
-                    </Box>
-                    <Box
-                      sx={{
-                        backgroundColor: 'green',
-                        color: 'white',
-                        padding: '4px 8px',
-                        borderRadius: '4px',
-                        fontWeight: 'bold',
-                      }}
-                    >
-                      VALUE TRANSFER
-                    </Box>
-                  </CardContent>
-                </Card>
-              )
-            )}
+                    VALUE TRANSFER
+                  </Box>
+                </CardContent>
+              </Card>
+            ))}
           </Box>
         );
       })}

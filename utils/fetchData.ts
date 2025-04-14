@@ -23,8 +23,11 @@ export async function fetchBlocks(
 ): Promise<BlockData[]> {
   const latestBlockNumber = await provider.getBlockNumber();
   const blockData = await Promise.all(
-    Array.from({ length: count }, (_, i) => latestBlockNumber - i).map(
+    Array.from({ length: latestBlockNumber >= count ? count : latestBlockNumber + 1 }, (_, i) => latestBlockNumber - i).map(
       async (blockNumber): Promise<BlockData | null> => {
+        if (blockNumber < 0) {
+          throw new Error('blockNumber cannot be negative');
+        }
         const block = await provider.getBlock(blockNumber);
         if (!block) return null;
         const transactions = await Promise.all(

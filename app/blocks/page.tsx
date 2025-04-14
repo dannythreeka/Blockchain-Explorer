@@ -2,15 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { JsonRpcProvider, formatEther } from 'ethers';
-import {
-  Box,
-  Typography,
-  Card,
-  CardContent,
-  Button,
-  Grid,
-  Paper,
-} from '@mui/material';
+import { Box, Typography, Card, CardContent, Button } from '@mui/material';
 import { fetchBlocks } from '../../utils/fetchData';
 
 // Define types for blocks and selectedBlock
@@ -162,7 +154,7 @@ export default function Blocks() {
         Recent Blocks
       </Typography>
 
-      {blocks.map((block, index) => (
+      {blocks.map((block) => (
         <Card
           key={block.hash}
           variant="outlined"

@@ -4,11 +4,6 @@ import React, { useEffect, useState } from 'react';
 import { JsonRpcProvider, formatEther } from 'ethers';
 import { Box, Typography, Card, CardContent } from '@mui/material';
 
-// Define the Eip1193Provider type to resolve the type error
-interface Eip1193Provider {
-  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
-}
-
 // Replace 'any' with a more specific type for window.ethereum
 interface EthereumProvider {
   isMetaMask?: boolean;
