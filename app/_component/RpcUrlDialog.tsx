@@ -9,6 +9,7 @@ import {
 } from '@mui/material';
 
 export default function RpcUrlDialog() {
+  // FIXME: ReferenceError: localStorage is not defined
   const [rpcUrl, setRpcUrl] = useState(
     localStorage.getItem('rpcUrl') || 'http://127.0.0.1:8545/'
   );
