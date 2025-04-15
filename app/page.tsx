@@ -1,7 +1,7 @@
 'use client';
 
 import { Box, Typography } from '@mui/material';
-import RpcUrlDialog from './_component/RpcUrlDialog';
+// import RpcUrlDialog from './_component/RpcUrlDialog';
 
 export default function Home() {
   return (
@@ -13,7 +13,8 @@ export default function Home() {
       minHeight="100vh"
       p={4}
     >
-      <RpcUrlDialog />
+      {/* TODO: Uncomment the RpcUrlDialog component when ready */}
+      {/* <RpcUrlDialog /> */}
       <Box textAlign="center" mt={4}>
         <Typography variant="h4" gutterBottom>
           Welcome to Blockchain Explorer
