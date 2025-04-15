@@ -1,20 +1,39 @@
 'use client';
 
+import { Box, Typography } from '@mui/material';
 import RpcUrlDialog from './_component/RpcUrlDialog';
 
 export default function Home() {
   return (
-    <div className="grid items-center justify-items-center min-h-screen p-8 pb-20 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+    <Box
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
+      justifyContent="center"
+      minHeight="100vh"
+      p={4}
+    >
       <RpcUrlDialog />
-      <section className="mt-8 text-center">
-        <h2 className="text-2xl font-bold mb-4">Welcome to Blockchain Explorer</h2>
-        <p className="text-lg leading-7">
-          This website allows you to explore blockchain data, including accounts, blocks, and transactions.
-          Use the navigation links above to access different sections of the blockchain.
-          You can also set your preferred RPC URL using the "Set RPC URL" button at the top.
-          Start exploring and analyzing on-chain data to develop and debug your smart contracts with ease.
-        </p>
-      </section>
-    </div>
+      <Box textAlign="center" mt={4}>
+        <Typography variant="h4" gutterBottom>
+          Welcome to Blockchain Explorer
+        </Typography>
+        <Typography variant="body1" paragraph>
+          Blockchain Explorer is a developer-friendly tool designed to simplify
+          the process of developing and debugging smart contracts. Inspired by
+          tools like Ganache, this project provides a user-friendly interface to
+          visualize and interact with the blockchain network.
+        </Typography>
+        <Typography variant="body1" paragraph>
+          Use the navigation links above to explore recent blocks, transactions,
+          events, and logs. You can also set your preferred RPC URL using the
+          &quot;Set RPC URL&quot; button at the top.
+        </Typography>
+        <Typography variant="body1">
+          Start exploring and analyzing on-chain data to develop and debug your
+          smart contracts with ease.
+        </Typography>
+      </Box>
+    </Box>
   );
 }
