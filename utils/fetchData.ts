@@ -1,4 +1,5 @@
 import { JsonRpcProvider } from 'ethers';
+import { getRpcUrl, MAX_BLOCKS_TO_FETCH } from './constants';
 
 interface TransactionData {
   hash: string;
@@ -23,35 +24,36 @@ export async function fetchBlocks(
 ): Promise<BlockData[]> {
   const latestBlockNumber = await provider.getBlockNumber();
   const blockData = await Promise.all(
-    Array.from({ length: latestBlockNumber >= count ? count : latestBlockNumber + 1 }, (_, i) => latestBlockNumber - i).map(
-      async (blockNumber): Promise<BlockData | null> => {
-        if (blockNumber < 0) {
-          throw new Error('blockNumber cannot be negative');
-        }
-        const block = await provider.getBlock(blockNumber);
-        if (!block) return null;
-        const transactions = await Promise.all(
-          block.transactions.map(async (txHash: string) => {
-            const tx = await provider.getTransaction(txHash);
-            return {
-              hash: tx?.hash || 'N/A',
-              from: tx?.from || 'N/A',
-              to: tx?.to || null,
-              gasLimit: tx?.gasLimit.toString() || '0',
-              value: tx?.value.toString() || '0',
-              data: tx?.data || undefined,
-            };
-          })
-        );
-        return {
-          number: block.number,
-          timestamp: new Date(block.timestamp * 1000).toLocaleString(),
-          hash: block.hash || 'N/A',
-          gasUsed: block.gasUsed.toString(),
-          transactions,
-        };
+    Array.from(
+      { length: latestBlockNumber >= count ? count : latestBlockNumber + 1 },
+      (_, i) => latestBlockNumber - i
+    ).map(async (blockNumber): Promise<BlockData | null> => {
+      if (blockNumber < 0) {
+        throw new Error('blockNumber cannot be negative');
       }
-    )
+      const block = await provider.getBlock(blockNumber);
+      if (!block) return null;
+      const transactions = await Promise.all(
+        block.transactions.map(async (txHash: string) => {
+          const tx = await provider.getTransaction(txHash);
+          return {
+            hash: tx?.hash || 'N/A',
+            from: tx?.from || 'N/A',
+            to: tx?.to || null,
+            gasLimit: tx?.gasLimit.toString() || '0',
+            value: tx?.value.toString() || '0',
+            data: tx?.data || undefined,
+          };
+        })
+      );
+      return {
+        number: block.number,
+        timestamp: new Date(block.timestamp * 1000).toLocaleString(),
+        hash: block.hash || 'N/A',
+        gasUsed: block.gasUsed.toString(),
+        transactions,
+      };
+    })
   );
 
   // Filter out null values and remove duplicate blocks by hash
@@ -64,9 +66,9 @@ export async function fetchBlocks(
 }
 
 export async function fetchAllBlocksAndTransactions() {
-  const rpcUrl = localStorage.getItem('rpcUrl') || 'http://127.0.0.1:8545/';
+  const rpcUrl = getRpcUrl();
   const provider = new JsonRpcProvider(rpcUrl);
 
-  const blocks = await fetchBlocks(provider, 10); // Fetch the 10 most recent blocks
+  const blocks = await fetchBlocks(provider, MAX_BLOCKS_TO_FETCH); // Using the constant for block count
   return blocks;
 }

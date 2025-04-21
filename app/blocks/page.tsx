@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { JsonRpcProvider, formatEther } from 'ethers';
 import { Box, Typography, Card, CardContent, Button } from '@mui/material';
 import { fetchBlocks } from '../../utils/fetchData';
+import { getRpcUrl } from '../../utils/constants';
 
 // Define types for blocks and selectedBlock
 interface BlockData {
@@ -38,8 +39,7 @@ export default function Blocks() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const rpcUrl =
-          localStorage.getItem('rpcUrl') || 'http://127.0.0.1:8545/';
+        const rpcUrl = getRpcUrl();
         const provider = new JsonRpcProvider(rpcUrl);
         const blockData = await fetchBlocks(provider, 10);
         setBlocks(
@@ -59,7 +59,7 @@ export default function Blocks() {
   // Explicitly type parameters
   const fetchBlockDetails = async (blockNumber: number) => {
     try {
-      const provider = new JsonRpcProvider('http://127.0.0.1:8545/');
+      const provider = new JsonRpcProvider(getRpcUrl());
       const block = await provider.getBlock(blockNumber);
       if (!block) {
         console.error('Block not found');

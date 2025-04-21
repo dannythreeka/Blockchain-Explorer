@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { JsonRpcProvider, formatEther } from 'ethers';
 import { Box, Typography, Card, CardContent } from '@mui/material';
+import { getRpcUrl } from '../../utils/constants';
 
 // Replace 'any' with a more specific type for window.ethereum
 interface EthereumProvider {
@@ -30,8 +31,8 @@ export default function Accounts() {
   useEffect(() => {
     async function fetchAccounts() {
       try {
-        // Connect to the Hardhat network
-        const provider = new JsonRpcProvider('http://127.0.0.1:8545/');
+        // Connect to the network using the RPC URL from constants
+        const provider = new JsonRpcProvider(getRpcUrl());
 
         // Fetch all accounts from the Hardhat network
         const allAccounts = await provider.listAccounts();
