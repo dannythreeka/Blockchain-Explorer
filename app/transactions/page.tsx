@@ -98,7 +98,7 @@ export default function Transactions() {
           variant="contained"
           onClick={() => setSelectedTransaction(null)}
         >
-          &lt;- Back
+          Back
         </Button>
         <Typography variant="h5" gutterBottom>
           Transaction Hash: {selectedTransaction.hash}

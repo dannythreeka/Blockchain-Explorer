@@ -160,7 +160,7 @@ export default function Blocks() {
     return (
       <Box p={4}>
         <Button variant="contained" onClick={() => setSelectedBlock(null)}>
-          &lt;- Back
+          Back
         </Button>
         <Typography variant="h5" gutterBottom>
           Block Number: {selectedBlock.number}
