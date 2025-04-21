@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { JsonRpcProvider, Log } from 'ethers';
 import { Box, Typography, List, ListItem, ListItemText } from '@mui/material';
+import { getRpcUrl } from '../../utils/constants';
 
 export default function LogsPage() {
   const [logs, setLogs] = useState<Log[]>([]);
@@ -10,7 +11,7 @@ export default function LogsPage() {
   useEffect(() => {
     async function fetchLogs() {
       try {
-        const provider = new JsonRpcProvider('http://127.0.0.1:8545/');
+        const provider = new JsonRpcProvider(getRpcUrl());
         const filter = {
           fromBlock: 0,
           toBlock: 'latest',

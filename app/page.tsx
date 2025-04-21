@@ -1,7 +1,6 @@
 'use client';
 
 import { Box, Typography } from '@mui/material';
-// import RpcUrlDialog from './_component/RpcUrlDialog';
 
 export default function Home() {
   return (
@@ -13,8 +12,6 @@ export default function Home() {
       minHeight="100vh"
       p={4}
     >
-      {/* TODO: Uncomment the RpcUrlDialog component when ready */}
-      {/* <RpcUrlDialog /> */}
       <Box textAlign="center" mt={4}>
         <Typography variant="h4" gutterBottom>
           Welcome to Blockchain Explorer
@@ -27,8 +24,8 @@ export default function Home() {
         </Typography>
         <Typography variant="body1" paragraph>
           Use the navigation links above to explore recent blocks, transactions,
-          events, and logs. You can also set your preferred RPC URL using the
-          &quot;Set RPC URL&quot; button at the top.
+          events, and logs. You can also set your preferred RPC URL in the
+          Settings page.
         </Typography>
         <Typography variant="body1">
           Start exploring and analyzing on-chain data to develop and debug your

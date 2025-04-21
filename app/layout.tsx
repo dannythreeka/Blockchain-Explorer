@@ -54,6 +54,7 @@ export default function RootLayout({
               <Link href="/contracts">Contracts</Link>
               <Link href="/events">Events</Link>
               <Link href="/logs">Logs</Link>
+              <Link href="/settings">Settings</Link>
             </nav>
           </header>
           <main className="pt-16">{children}</main>
