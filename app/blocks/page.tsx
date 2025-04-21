@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { JsonRpcProvider, formatEther } from 'ethers';
+import { formatEther } from 'ethers';
 import { Box, Typography, Card, CardContent, Button } from '@mui/material';
-import { fetchBlocks } from '../../utils/fetchData';
+import { fetchBlocks, createValidatedProvider } from '../../utils/fetchData';
 import { getRpcUrl } from '../../utils/constants';
 
 // Define types for blocks and selectedBlock
@@ -35,13 +35,19 @@ export default function Blocks() {
   const [selectedBlock, setSelectedBlock] = useState<SelectedBlock | null>(
     null
   );
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const rpcUrl = getRpcUrl();
-        const provider = new JsonRpcProvider(rpcUrl);
+        setIsLoading(true);
+        setError(null);
+
+        // Use our validated provider
+        const provider = await createValidatedProvider();
         const blockData = await fetchBlocks(provider, 10);
+
         setBlocks(
           blockData.map((block) => ({
             ...block,
@@ -50,6 +56,15 @@ export default function Blocks() {
         );
       } catch (error) {
         console.error('Error fetching blocks:', error);
+        if (error instanceof Error) {
+          setError(error.message);
+        } else {
+          setError(
+            'Failed to connect to the Ethereum node. Please check your network settings and ensure your node is running.'
+          );
+        }
+      } finally {
+        setIsLoading(false);
       }
     }
 
@@ -59,7 +74,11 @@ export default function Blocks() {
   // Explicitly type parameters
   const fetchBlockDetails = async (blockNumber: number) => {
     try {
-      const provider = new JsonRpcProvider(getRpcUrl());
+      setError(null);
+
+      // Use our validated provider
+      const provider = await createValidatedProvider();
+
       const block = await provider.getBlock(blockNumber);
       if (!block) {
         console.error('Block not found');
@@ -93,8 +112,49 @@ export default function Blocks() {
       });
     } catch (error) {
       console.error('Error fetching block details:', error);
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError(
+          'Failed to connect to the Ethereum node when fetching block details.'
+        );
+      }
     }
   };
+
+  // Error notification component
+  const ErrorNotification = () => (
+    <Card
+      variant="outlined"
+      sx={{ mb: 2, bgcolor: 'error.light', color: 'error.contrastText' }}
+    >
+      <CardContent>
+        <Typography variant="h6">Connection Error</Typography>
+        <Typography variant="body1">{error}</Typography>
+        <Typography variant="body2" sx={{ mt: 1 }}>
+          Please check if:
+          <ul>
+            <li>Your Ethereum node is running</li>
+            <li>
+              The RPC URL is correctly configured (current URL: {getRpcUrl()})
+            </li>
+            <li>Your network connection is stable</li>
+          </ul>
+        </Typography>
+      </CardContent>
+    </Card>
+  );
+
+  if (error) {
+    return (
+      <Box p={4}>
+        <Typography variant="h4" gutterBottom>
+          Recent Blocks
+        </Typography>
+        <ErrorNotification />
+      </Box>
+    );
+  }
 
   if (selectedBlock) {
     return (
@@ -154,32 +214,38 @@ export default function Blocks() {
         Recent Blocks
       </Typography>
 
-      {blocks.map((block) => (
-        <Card
-          key={block.hash}
-          variant="outlined"
-          sx={{ cursor: 'pointer', mb: 2 }}
-          onClick={() => fetchBlockDetails(block.number)}
-        >
-          <CardContent>
-            <Typography variant="body1">
-              <strong>Block Number:</strong> {block.number}
-            </Typography>
-            <Typography variant="body1">
-              <strong>Mined On:</strong> {block.timestamp}
-            </Typography>
-            <Typography variant="body1">
-              <strong>Block Hash:</strong> {block.hash}
-            </Typography>
-            <Typography variant="body1">
-              <strong>Gas Used:</strong> {block.gasUsed}
-            </Typography>
-            <Typography variant="body1">
-              <strong>Transactions:</strong> {block.transactions}
-            </Typography>
-          </CardContent>
-        </Card>
-      ))}
+      {isLoading ? (
+        <Typography>Loading blocks...</Typography>
+      ) : blocks.length > 0 ? (
+        blocks.map((block) => (
+          <Card
+            key={block.hash}
+            variant="outlined"
+            sx={{ cursor: 'pointer', mb: 2 }}
+            onClick={() => fetchBlockDetails(block.number)}
+          >
+            <CardContent>
+              <Typography variant="body1">
+                <strong>Block Number:</strong> {block.number}
+              </Typography>
+              <Typography variant="body1">
+                <strong>Mined On:</strong> {block.timestamp}
+              </Typography>
+              <Typography variant="body1">
+                <strong>Block Hash:</strong> {block.hash}
+              </Typography>
+              <Typography variant="body1">
+                <strong>Gas Used:</strong> {block.gasUsed}
+              </Typography>
+              <Typography variant="body1">
+                <strong>Transactions:</strong> {block.transactions}
+              </Typography>
+            </CardContent>
+          </Card>
+        ))
+      ) : (
+        <Typography>No blocks found on the connected Ethereum node.</Typography>
+      )}
     </Box>
   );
 }
