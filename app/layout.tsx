@@ -84,12 +84,6 @@ export default function RootLayout({
                     Events
                   </Link>
                   <Link
-                    href="/logs"
-                    className="hover:text-blue-500 transition-colors"
-                  >
-                    Logs
-                  </Link>
-                  <Link
                     href="/settings"
                     className="hover:text-blue-500 transition-colors"
                   >

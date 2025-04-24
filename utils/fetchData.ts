@@ -84,6 +84,7 @@ export async function fetchBlocks(
       const transactions = await Promise.all(
         block.transactions.map(async (txHash: string) => {
           const tx = await provider.getTransaction(txHash);
+          console.log('Transaction:', tx);
           return {
             hash: tx?.hash || 'N/A',
             from: tx?.from || 'N/A',
