@@ -5,6 +5,7 @@ import './globals.css';
 import { Author } from 'next/dist/lib/metadata/types/metadata-types';
 import { ThemeProvider } from '../utils/theme/ThemeProvider';
 import { ThemeToggle } from './_components/ThemeToggle';
+import { RpcUrlDisplay } from './_components/RpcUrlDisplay';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -95,7 +96,10 @@ export default function RootLayout({
                     Settings
                   </Link>
                 </nav>
-                <ThemeToggle />
+                <div className="flex items-center space-x-4">
+                  <RpcUrlDisplay />
+                  <ThemeToggle />
+                </div>
               </div>
             </header>
             <main className="pt-16 min-h-screen">{children}</main>
