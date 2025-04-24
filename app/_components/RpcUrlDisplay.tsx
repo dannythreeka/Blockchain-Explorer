@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { getRpcUrl } from '../../utils/constants';
 import { Chip, Tooltip, Typography, useTheme } from '@mui/material';
-import PowerIcon from '@mui/icons-material/Power';
 
 export function RpcUrlDisplay() {
   const [rpcUrl, setRpcUrl] = useState<string>('');
