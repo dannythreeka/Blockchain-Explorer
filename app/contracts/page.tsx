@@ -21,7 +21,7 @@ import {
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { createValidatedProvider } from '../../utils/fetchData';
 import { getRpcUrl } from '../../utils/constants';
-import { Contract, ethers } from 'ethers';
+import { Contract, JsonRpcProvider } from 'ethers';
 
 interface ContractFunction {
   name: string;
@@ -34,7 +34,7 @@ interface ContractFunction {
 export default function ContractsPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [provider, setProvider] = useState<ethers.JsonRpcProvider | null>(null);
+  const [provider, setProvider] = useState<JsonRpcProvider | null>(null);
   const [contractAddress, setContractAddress] = useState<string>('');
   const [contractAbi, setContractAbi] = useState<string>('');
   const [contractInstance, setContractInstance] = useState<Contract | null>(
@@ -46,9 +46,9 @@ export default function ContractsPage() {
   const [functionInputs, setFunctionInputs] = useState<
     Record<string, string[]>
   >({});
-  const [functionResults, setFunctionResults] = useState<Record<string, any>>(
-    {}
-  );
+  const [functionResults, setFunctionResults] = useState<
+    Record<string, unknown>
+  >({});
   const [activeTab, setActiveTab] = useState<number>(0);
   const [isContractLoading, setIsContractLoading] = useState<boolean>(false);
   const [functionCallLoading, setFunctionCallLoading] = useState<
@@ -100,31 +100,34 @@ export default function ContractsPage() {
       let parsedAbi;
       try {
         parsedAbi = JSON.parse(contractAbi);
-      } catch (e) {
+      } catch {
         throw new Error('Invalid ABI format. Please provide a valid JSON ABI.');
       }
 
       // Create a new contract instance
-      const contract = new ethers.Contract(
-        contractAddress,
-        parsedAbi,
-        provider
-      );
+      const contract = new Contract(contractAddress, parsedAbi, provider);
       setContractInstance(contract);
 
       // Extract functions from ABI
       const functions: ContractFunction[] = parsedAbi
-        .filter((item: any) => item.type === 'function')
-        .map((item: any) => ({
-          name: item.name,
-          type:
-            item.stateMutability === 'view' || item.stateMutability === 'pure'
-              ? 'read'
-              : 'write',
-          inputs: item.inputs || [],
-          outputs: item.outputs || [],
-          stateMutability: item.stateMutability,
-        }));
+        .filter((item: { type: string }) => item.type === 'function')
+        .map(
+          (item: {
+            name: string;
+            stateMutability?: string;
+            inputs?: Array<{ name: string; type: string }>;
+            outputs?: Array<{ name: string; type: string }>;
+          }) => ({
+            name: item.name,
+            type:
+              item.stateMutability === 'view' || item.stateMutability === 'pure'
+                ? 'read'
+                : 'write',
+            inputs: item.inputs || [],
+            outputs: item.outputs || [],
+            stateMutability: item.stateMutability,
+          })
+        );
 
       setContractFunctions(functions);
 
@@ -154,17 +157,19 @@ export default function ContractsPage() {
       setFunctionCallLoading((prev) => ({ ...prev, [funcName]: true }));
       const inputs = functionInputs[funcName] || [];
 
-      let result;
+      let result: unknown;
       if (type === 'read') {
         // For read functions, we call directly
-        result = await contractInstance[funcName](...inputs);
+        result = await contractInstance
+          .getFunction(funcName)
+          .staticCall(...inputs);
 
-        // Format BigNumber results for display
-        if (ethers.BigNumber.isBigNumber(result)) {
+        // Format BigInt results for display
+        if (typeof result === 'bigint') {
           result = result.toString();
         } else if (Array.isArray(result)) {
           result = result.map((item) =>
-            ethers.BigNumber.isBigNumber(item) ? item.toString() : item
+            typeof item === 'bigint' ? item.toString() : item
           );
         }
 
@@ -174,7 +179,7 @@ export default function ContractsPage() {
         }));
       } else {
         // For write functions, we send a transaction
-        const tx = await contractInstance[funcName](...inputs);
+        const tx = await contractInstance.getFunction(funcName)(...inputs);
         setFunctionResults((prev) => ({
           ...prev,
           [funcName]: `Transaction sent: ${tx.hash}`,
@@ -267,8 +272,8 @@ export default function ContractsPage() {
         <AlertTitle sx={{ fontWeight: 'bold' }}>Under Construction</AlertTitle>
         <Typography variant="body1">
           This contracts page is currently in active development. Some features
-          may be incomplete or not fully functional. We're working to improve
-          the experience and add more capabilities soon!
+          may be incomplete or not fully functional. We&apos;re working to
+          improve the experience and add more capabilities soon!
         </Typography>
       </Alert>
 

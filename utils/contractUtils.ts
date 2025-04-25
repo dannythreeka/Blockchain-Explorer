@@ -1,4 +1,4 @@
-import { Contract, ethers } from 'ethers';
+import { Contract, JsonRpcSigner, ethers, InterfaceAbi } from 'ethers';
 import { createValidatedProvider } from './fetchData';
 
 export interface ContractEvent {
@@ -16,12 +16,18 @@ export interface ParsedAbiItem {
   anonymous?: boolean;
 }
 
+export type AbiInput = {
+  name: string;
+  type: string;
+  indexed?: boolean;
+};
+
 /**
  * Creates a contract instance from an address and ABI
  */
 export async function createContract(
   address: string,
-  abi: string | Array<any>,
+  abi: string | InterfaceAbi,
   withSigner = false
 ): Promise<Contract> {
   // Get the provider
@@ -34,56 +40,60 @@ export async function createContract(
   if (withSigner) {
     // Note: This will prompt the user to connect their wallet
     // If you're using a specific wallet integration, you'll need to modify this
-    const signer = await provider.getSigner();
-    return new ethers.Contract(address, parsedAbi, signer);
+    const signer = (await provider.getSigner()) as JsonRpcSigner;
+    return new Contract(address, parsedAbi, signer);
   }
 
   // Read-only contract
-  return new ethers.Contract(address, parsedAbi, provider);
+  return new Contract(address, parsedAbi, provider);
 }
 
 /**
  * Extract events from a contract ABI
  */
-export function extractContractEvents(abi: Array<any>): ContractEvent[] {
+export function extractContractEvents(abi: ParsedAbiItem[]): ContractEvent[] {
   return abi
     .filter((item) => item.type === 'event')
     .map((item) => ({
-      name: item.name,
-      signature: `${item.name}(${item.inputs
-        .map((i: any) => i.type)
-        .join(',')})`,
-      inputs: item.inputs,
+      name: item.name || '',
+      signature: `${item.name || ''}(${
+        item.inputs?.map((i: AbiInput) => i.type).join(',') || ''
+      })`,
+      inputs: (item.inputs || []).map((input) => ({
+        name: input.name,
+        type: input.type,
+        indexed: input.indexed === true,
+      })),
     }));
 }
 
 /**
  * Formats a contract call result for display
  */
-export function formatContractCallResult(result: any): string {
+export function formatContractCallResult(result: unknown): string {
   if (result === undefined || result === null) {
     return 'null';
   }
 
-  // Handle BigNumber objects
-  if (ethers.BigNumber.isBigNumber(result)) {
+  // Handle BigInt values
+  if (typeof result === 'bigint') {
     return result.toString();
   }
 
-  // Handle arrays (including arrays of BigNumbers)
+  // Handle arrays (including arrays of BigInt)
   if (Array.isArray(result)) {
     const formattedArray = result.map((item) =>
-      ethers.BigNumber.isBigNumber(item) ? item.toString() : item
+      typeof item === 'bigint' ? item.toString() : item
     );
     return JSON.stringify(formattedArray, null, 2);
   }
 
   // Handle objects
-  if (typeof result === 'object') {
+  if (typeof result === 'object' && result !== null) {
     const formattedObject = Object.fromEntries(
       Object.entries(result).map(([key, value]) => [
         key,
-        ethers.BigNumber.isBigNumber(value) ? value.toString() : value,
+        typeof value === 'bigint' ? value.toString() : value,
       ])
     );
     return JSON.stringify(formattedObject, null, 2);
@@ -99,8 +109,8 @@ export async function getContractEvents(
   contract: Contract,
   eventName: string,
   fromBlock = 0,
-  toBlock = 'latest'
-): Promise<ethers.Event[]> {
+  toBlock: number | string = 'latest'
+): Promise<ethers.Log[]> {
   try {
     const filter = contract.filters[eventName]();
     return await contract.queryFilter(filter, fromBlock, toBlock);
@@ -132,7 +142,7 @@ export function parseContractAbi(abiString: string): ParsedAbiItem[] {
  * Verify if a string is a valid Ethereum address
  */
 export function isValidEthereumAddress(address: string): boolean {
-  return ethers.utils.isAddress(address);
+  return ethers.isAddress(address);
 }
 
 /**
@@ -141,10 +151,12 @@ export function isValidEthereumAddress(address: string): boolean {
 export async function estimateGasForContractCall(
   contract: Contract,
   methodName: string,
-  args: any[] = []
+  args: unknown[] = []
 ): Promise<string> {
   try {
-    const gasEstimate = await contract.estimateGas[methodName](...args);
+    const gasEstimate = await contract
+      .getFunction(methodName)
+      .estimateGas(...args);
     return gasEstimate.toString();
   } catch (error) {
     if (error instanceof Error) {
