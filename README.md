@@ -18,7 +18,7 @@ Blockchain Explorer is a developer-friendly tool designed to simplify the proces
 ### Prerequisites
 
 - Node.js (v16 or later)
-- Yarn (or npm/pnpm)
+- pnpm
 
 ### Installation
 
@@ -32,17 +32,13 @@ Blockchain Explorer is a developer-friendly tool designed to simplify the proces
 2. Install dependencies:
 
    ```bash
-   yarn install
-   # or
-   npm install
+   pnpm install
    ```
 
 3. Start the development server:
 
    ```bash
-   yarn dev
-   # or
-   npm run dev
+   pnpm dev
    ```
 
 4. Open [http://localhost:3000](http://localhost:3000) in your browser to access the app.

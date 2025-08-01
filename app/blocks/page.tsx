@@ -1,37 +1,20 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { formatEther } from 'ethers';
 import { Box, Typography, Card, CardContent, Button } from '@mui/material';
-import { fetchBlocks, createValidatedProvider } from '../../utils/fetchData';
-import { getRpcUrl } from '../../utils/constants';
+import { fetchBlocks, createValidatedProvider } from '@/utils/fetchData';
+import { BlockData, SelectedBlock, TransactionData } from '@/utils/schema';
+import TransactionDetails from '@/app/_components/TransactionDetails';
+import { getCreateAddress } from 'ethers'; // Import from ethers library
+import ErrorNotification from '@/app/_components/ErrorNotification';
 
-// Define types for blocks and selectedBlock
-interface BlockData {
-  number: number;
-  timestamp: string;
-  hash: string;
-  gasUsed: string;
+// Create a modified type that represents blocks with transaction count instead of transaction array
+type BlockWithTransactionCount = Omit<BlockData, 'transactions'> & {
   transactions: number;
-}
-
-interface SelectedBlock {
-  number: number;
-  gasUsed: string;
-  gasLimit: string;
-  timestamp: number;
-  hash: string;
-  transactions: Array<{
-    hash: string;
-    from: string;
-    to: string | null;
-    gasLimit: string;
-    value: string;
-  }>;
-}
+};
 
 export default function Blocks() {
-  const [blocks, setBlocks] = useState<BlockData[]>([]);
+  const [blocks, setBlocks] = useState<BlockWithTransactionCount[]>([]);
   const [selectedBlock, setSelectedBlock] = useState<SelectedBlock | null>(
     null
   );
@@ -71,6 +54,7 @@ export default function Blocks() {
     fetchData();
   }, []);
 
+  // FIXME: using fetchData.ts
   // Explicitly type parameters
   const fetchBlockDetails = async (blockNumber: number) => {
     try {
@@ -92,12 +76,19 @@ export default function Blocks() {
             console.error('Transaction not found');
             return null;
           }
+
+          const isCreatedContract = tx.to === null;
           return {
             hash: tx.hash,
             from: tx.from,
             to: tx.to,
+            // Use the getCreateAddress utility for contract creation transactions
+            createdContractAddress: isCreatedContract
+              ? getCreateAddress({ from: tx.from, nonce: tx.nonce })
+              : null,
             gasLimit: tx.gasLimit.toString(),
             value: tx.value.toString(),
+            data: tx.data,
           };
         })
       );
@@ -108,7 +99,9 @@ export default function Blocks() {
         gasLimit: block.gasLimit.toString(),
         timestamp: block.timestamp,
         hash: block.hash || 'N/A', // Provide fallback for null hash
-        transactions: transactions.filter((tx) => tx !== null), // Filter out null transactions
+        transactions: transactions.filter(
+          (tx) => tx !== null
+        ) as TransactionData[], // Filter out null transactions
       });
     } catch (error) {
       console.error('Error fetching block details:', error);
@@ -122,36 +115,13 @@ export default function Blocks() {
     }
   };
 
-  // Error notification component
-  const ErrorNotification = () => (
-    <Card
-      variant="outlined"
-      sx={{ mb: 2, bgcolor: 'error.light', color: 'error.contrastText' }}
-    >
-      <CardContent>
-        <Typography variant="h6">Connection Error</Typography>
-        <Typography variant="body1">{error}</Typography>
-        <Typography variant="body2" sx={{ mt: 1 }}>
-          Please check if:
-          <ul>
-            <li>Your Ethereum node is running</li>
-            <li>
-              The RPC URL is correctly configured (current URL: {getRpcUrl()})
-            </li>
-            <li>Your network connection is stable</li>
-          </ul>
-        </Typography>
-      </CardContent>
-    </Card>
-  );
-
   if (error) {
     return (
       <Box p={4}>
         <Typography variant="h4" gutterBottom>
           Recent Blocks
         </Typography>
-        <ErrorNotification />
+        <ErrorNotification error={error} />
       </Box>
     );
   }
@@ -183,25 +153,7 @@ export default function Blocks() {
         <Box mt={4}>
           <Typography variant="h6">Transactions</Typography>
           {selectedBlock.transactions.map((tx, idx) => (
-            <Card key={idx} variant="outlined" sx={{ mb: 2 }}>
-              <CardContent>
-                <Typography variant="body1">
-                  <strong>Transaction Hash:</strong> {tx.hash}
-                </Typography>
-                <Typography variant="body1">
-                  <strong>From:</strong> {tx.from}
-                </Typography>
-                <Typography variant="body1">
-                  <strong>To:</strong> {tx.to || 'Contract Creation'}
-                </Typography>
-                <Typography variant="body1">
-                  <strong>Gas Used:</strong> {tx.gasLimit}
-                </Typography>
-                <Typography variant="body1">
-                  <strong>Value:</strong> {formatEther(tx.value)} ETH
-                </Typography>
-              </CardContent>
-            </Card>
+            <TransactionDetails key={idx} transaction={tx} />
           ))}
         </Box>
       </Box>

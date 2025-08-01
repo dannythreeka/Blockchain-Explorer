@@ -1,22 +1,6 @@
-import { JsonRpcProvider } from 'ethers';
+import { getCreateAddress, JsonRpcProvider } from 'ethers';
 import { getRpcUrl, MAX_BLOCKS_TO_FETCH, REQUEST_TIMEOUT } from './constants';
-
-interface TransactionData {
-  hash: string;
-  from: string;
-  to: string | null;
-  gasLimit: string;
-  value: string;
-  data?: string;
-}
-
-interface BlockData {
-  number: number;
-  timestamp: string;
-  hash: string;
-  gasUsed: string;
-  transactions: TransactionData[]; // Update transactions to be an array of TransactionData
-}
+import { BlockData } from './schema';
 
 /**
  * Validates the connection to the Ethereum node
@@ -81,19 +65,31 @@ export async function fetchBlocks(
       }
       const block = await provider.getBlock(blockNumber);
       if (!block) return null;
-      const transactions = await Promise.all(
-        block.transactions.map(async (txHash: string) => {
-          const tx = await provider.getTransaction(txHash);
-          return {
-            hash: tx?.hash || 'N/A',
-            from: tx?.from || 'N/A',
-            to: tx?.to || null,
-            gasLimit: tx?.gasLimit.toString() || '0',
-            value: tx?.value.toString() || '0',
-            data: tx?.data || undefined,
-          };
-        })
-      );
+      const transactions = await (
+        await Promise.all(
+          block.transactions.map(async (txHash: string) => {
+            const tx = await provider.getTransaction(txHash);
+
+            if (!tx) return; // Handle case where transaction is not found
+
+            const isCreatedContract = tx.to === null;
+            return {
+              hash: tx?.hash || 'N/A',
+              from: tx?.from || 'N/A',
+              to: tx?.to || null,
+              createdContractAddress: isCreatedContract
+                ? getCreateAddress({
+                    from: tx.from,
+                    nonce: tx.nonce,
+                  })
+                : null,
+              gasLimit: tx?.gasLimit.toString() || '0',
+              value: tx?.value.toString() || '0',
+              data: tx?.data || undefined,
+            };
+          })
+        )
+      ).filter((tx) => tx !== undefined); // Filter out undefined transactions
       return {
         number: block.number,
         timestamp: new Date(block.timestamp * 1000).toLocaleString(),

@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Card, CardContent } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { createValidatedProvider } from '../../utils/fetchData';
 import { getRpcUrl } from '../../utils/constants';
+import ErrorNotification from '@/app/_components/ErrorNotification';
 
 export default function EventsPage() {
   const [error, setError] = useState<string | null>(null);
@@ -36,29 +37,6 @@ export default function EventsPage() {
     checkConnection();
   }, []);
 
-  // Error notification component
-  const ErrorNotification = () => (
-    <Card
-      variant="outlined"
-      sx={{ mb: 2, bgcolor: 'error.light', color: 'error.contrastText' }}
-    >
-      <CardContent>
-        <Typography variant="h6">Connection Error</Typography>
-        <Typography variant="body1">{error}</Typography>
-        <Typography variant="body2" sx={{ mt: 1 }}>
-          Please check if:
-          <ul>
-            <li>Your Ethereum node is running</li>
-            <li>
-              The RPC URL is correctly configured (current URL: {getRpcUrl()})
-            </li>
-            <li>Your network connection is stable</li>
-          </ul>
-        </Typography>
-      </CardContent>
-    </Card>
-  );
-
   return (
     <Box p={4}>
       <Typography variant="h4" gutterBottom>
@@ -68,7 +46,7 @@ export default function EventsPage() {
       {isLoading ? (
         <Typography>Checking connection to Ethereum node...</Typography>
       ) : error ? (
-        <ErrorNotification />
+        <ErrorNotification error={error} />
       ) : (
         <Typography variant="body1" color="textSecondary">
           This page will display contract events when implemented.
