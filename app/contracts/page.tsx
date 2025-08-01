@@ -19,9 +19,9 @@ import {
   AlertTitle,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { createValidatedProvider } from '../../utils/fetchData';
-import { getRpcUrl } from '../../utils/constants';
+import { createValidatedProvider } from '@/utils/fetchData';
 import { Contract, JsonRpcProvider } from 'ethers';
+import ErrorNotification from '@/app/_components/ErrorNotification';
 
 interface ContractFunction {
   name: string;
@@ -226,29 +226,6 @@ export default function ContractsPage() {
     setActiveTab(newValue);
   };
 
-  // Error notification component
-  const ErrorNotification = () => (
-    <Card
-      variant="outlined"
-      sx={{ mb: 2, bgcolor: 'error.light', color: 'error.contrastText' }}
-    >
-      <CardContent>
-        <Typography variant="h6">Connection Error</Typography>
-        <Typography variant="body1">{error}</Typography>
-        <Typography variant="body2" sx={{ mt: 1 }}>
-          Please check if:
-          <ul>
-            <li>Your Ethereum node is running</li>
-            <li>
-              The RPC URL is correctly configured (current URL: {getRpcUrl()})
-            </li>
-            <li>Your network connection is stable</li>
-          </ul>
-        </Typography>
-      </CardContent>
-    </Card>
-  );
-
   // Filter functions based on active tab
   const filteredFunctions = contractFunctions.filter(
     (func) =>
@@ -256,6 +233,17 @@ export default function ContractsPage() {
       (activeTab === 1 && func.type === 'read') ||
       (activeTab === 2 && func.type === 'write')
   );
+
+  if (error && !contractAddress) {
+    return (
+      <Box p={4}>
+        <Typography variant="h4" gutterBottom>
+          Smart Contract Explorer
+        </Typography>
+        <ErrorNotification error={error} />
+      </Box>
+    );
+  }
 
   return (
     <Box p={4}>
@@ -285,8 +273,6 @@ export default function ContractsPage() {
         <Box display="flex" justifyContent="center" my={4}>
           <CircularProgress />
         </Box>
-      ) : error && !contractAddress ? (
-        <ErrorNotification />
       ) : (
         <>
           <Card sx={{ mb: 4 }}>

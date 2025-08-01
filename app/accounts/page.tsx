@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { formatEther } from 'ethers';
 import { Box, Typography, Card, CardContent } from '@mui/material';
-import { getRpcUrl } from '../../utils/constants';
-import { createValidatedProvider } from '../../utils/fetchData';
+import { createValidatedProvider } from '@/utils/fetchData';
+import { formatEther } from 'ethers';
+import ErrorNotification from '@/app/_components/ErrorNotification';
 
 // Replace 'any' with a more specific type for window.ethereum
 interface EthereumProvider {
@@ -84,26 +84,7 @@ export default function Accounts() {
       </Typography>
 
       {error ? (
-        <Card
-          variant="outlined"
-          sx={{ mb: 2, bgcolor: 'error.light', color: 'error.contrastText' }}
-        >
-          <CardContent>
-            <Typography variant="h6">Connection Error</Typography>
-            <Typography variant="body1">{error}</Typography>
-            <Typography variant="body2" sx={{ mt: 1 }}>
-              Please check if:
-              <ul>
-                <li>Your Ethereum node is running</li>
-                <li>
-                  The RPC URL is correctly configured (current URL:{' '}
-                  {getRpcUrl()})
-                </li>
-                <li>Your network connection is stable</li>
-              </ul>
-            </Typography>
-          </CardContent>
-        </Card>
+        <ErrorNotification error={error} />
       ) : isLoading ? (
         <Typography>Loading accounts...</Typography>
       ) : accounts.length > 0 ? (

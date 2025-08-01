@@ -1,27 +1,11 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { formatEther } from 'ethers';
 import { Box, Typography, Card, CardContent, Button } from '@mui/material';
-import { fetchBlocks, createValidatedProvider } from '../../utils/fetchData';
-import { getRpcUrl } from '../../utils/constants';
-
-interface TransactionData {
-  hash: string;
-  from: string;
-  to: string | null;
-  gasLimit: string;
-  value: string;
-  data?: string; // Added optional data field
-}
-
-interface BlockData {
-  number: number;
-  timestamp: string;
-  hash: string;
-  gasUsed: string;
-  transactions: TransactionData[];
-}
+import { fetchBlocks, createValidatedProvider } from '@/utils/fetchData';
+import { BlockData, TransactionData } from '@/utils/schema';
+import TransactionDetails from '@/app/_components/TransactionDetails';
+import ErrorNotification from '@/app/_components/ErrorNotification';
 
 export default function Transactions() {
   const [blocks, setBlocks] = useState<BlockData[]>([]);
@@ -57,36 +41,13 @@ export default function Transactions() {
     fetchData();
   }, []);
 
-  // Error notification component
-  const ErrorNotification = () => (
-    <Card
-      variant="outlined"
-      sx={{ mb: 2, bgcolor: 'error.light', color: 'error.contrastText' }}
-    >
-      <CardContent>
-        <Typography variant="h6">Connection Error</Typography>
-        <Typography variant="body1">{error}</Typography>
-        <Typography variant="body2" sx={{ mt: 1 }}>
-          Please check if:
-          <ul>
-            <li>Your Ethereum node is running</li>
-            <li>
-              The RPC URL is correctly configured (current URL: {getRpcUrl()})
-            </li>
-            <li>Your network connection is stable</li>
-          </ul>
-        </Typography>
-      </CardContent>
-    </Card>
-  );
-
   if (error) {
     return (
       <Box p={4}>
         <Typography variant="h4" gutterBottom>
           Recent Transactions
         </Typography>
-        <ErrorNotification />
+        <ErrorNotification error={error} />
       </Box>
     );
   }
@@ -104,18 +65,7 @@ export default function Transactions() {
           Transaction Hash: {selectedTransaction.hash}
         </Typography>
         <Box mt={2}>
-          <Typography variant="body1">
-            <strong>From:</strong> {selectedTransaction.from}
-          </Typography>
-          <Typography variant="body1">
-            <strong>To:</strong> {selectedTransaction.to || 'Contract Creation'}
-          </Typography>
-          <Typography variant="body1">
-            <strong>Gas Limit:</strong> {selectedTransaction.gasLimit}
-          </Typography>
-          <Typography variant="body1">
-            <strong>Value:</strong> {formatEther(selectedTransaction.value)} ETH
-          </Typography>
+          <TransactionDetails transaction={selectedTransaction} />
         </Box>
         {/* Add TX DATA to the transaction details view */}
         <Box mt={4}>
@@ -137,16 +87,14 @@ export default function Transactions() {
           <Box
             sx={{
               backgroundColor:
-                selectedTransaction.to === 'Contract Creation'
-                  ? 'red'
-                  : 'green',
+                selectedTransaction.to === null ? 'red' : 'green',
               color: 'white',
               padding: '4px 8px',
               borderRadius: '4px',
               fontWeight: 'bold',
             }}
           >
-            {selectedTransaction.to === 'Contract Creation'
+            {selectedTransaction.to === null
               ? 'CONTRACT CREATION'
               : 'VALUE TRANSFER'}
           </Box>
@@ -207,31 +155,7 @@ export default function Transactions() {
                       alignItems: 'center',
                     }}
                   >
-                    <Box>
-                      <Typography variant="body1">
-                        <strong>Transaction Hash:</strong> {tx.hash}
-                      </Typography>
-                      <Typography variant="body1">
-                        <strong>From:</strong> {tx.from}
-                      </Typography>
-                      <Typography variant="body1">
-                        <strong>Gas Limit:</strong> {tx.gasLimit}
-                      </Typography>
-                      <Typography variant="body1">
-                        <strong>Value:</strong> {formatEther(tx.value)} ETH
-                      </Typography>
-                    </Box>
-                    <Box
-                      sx={{
-                        backgroundColor: 'red',
-                        color: 'white',
-                        padding: '4px 8px',
-                        borderRadius: '4px',
-                        fontWeight: 'bold',
-                      }}
-                    >
-                      CONTRACT CREATION
-                    </Box>
+                    <TransactionDetails transaction={tx} showBadge isCompact />
                   </CardContent>
                 </Card>
               ))}
@@ -253,34 +177,7 @@ export default function Transactions() {
                       alignItems: 'center',
                     }}
                   >
-                    <Box>
-                      <Typography variant="body1">
-                        <strong>Transaction Hash:</strong> {tx.hash}
-                      </Typography>
-                      <Typography variant="body1">
-                        <strong>From:</strong> {tx.from}
-                      </Typography>
-                      <Typography variant="body1">
-                        <strong>To:</strong> {tx.to}
-                      </Typography>
-                      <Typography variant="body1">
-                        <strong>Gas Limit:</strong> {tx.gasLimit}
-                      </Typography>
-                      <Typography variant="body1">
-                        <strong>Value:</strong> {formatEther(tx.value)} ETH
-                      </Typography>
-                    </Box>
-                    <Box
-                      sx={{
-                        backgroundColor: 'green',
-                        color: 'white',
-                        padding: '4px 8px',
-                        borderRadius: '4px',
-                        fontWeight: 'bold',
-                      }}
-                    >
-                      VALUE TRANSFER
-                    </Box>
+                    <TransactionDetails transaction={tx} showBadge isCompact />
                   </CardContent>
                 </Card>
               ))}
